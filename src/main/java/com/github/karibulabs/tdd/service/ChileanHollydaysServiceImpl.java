@@ -8,6 +8,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,6 +20,9 @@ import java.util.List;
 public class ChileanHollydaysServiceImpl implements ChileanHollydaysService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ChileanHollydaysServiceImpl.class);
+
+    @Value("${hollyday.api.resource.url}")
+    private String hollydayApiResourceURL;
 
     @Autowired
     ChileanHollydayRepository chileanHollydayRepository;
@@ -34,7 +38,7 @@ public class ChileanHollydaysServiceImpl implements ChileanHollydaysService {
         try {
             chileanHollydayRepository.deleteAll();
             HttpResponse<ChileanHollyday[]> response =
-                    Unirest.get("https://feriados-cl-api.herokuapp.com/feriados")
+                    Unirest.get(hollydayApiResourceURL)
                             .asObject(ChileanHollyday[].class);
             ChileanHollyday [] chileanHollydays = response.getBody();
             Arrays.stream(chileanHollydays).forEach(chileanHollyday -> {
