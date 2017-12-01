@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.io.IOException;
 
 @SpringBootApplication
-public class ChileanHollydaysApp {
+public class ChileanHollydayApp {
 
     static {
         Unirest.setObjectMapper(new ObjectMapper() {
@@ -36,6 +36,6 @@ public class ChileanHollydaysApp {
     }
 
     public static void main(String [] args){
-        SpringApplication.run(ChileanHollydaysApp.class,args);
+        SpringApplication.run(ChileanHollydayApp.class,args);
     }
 }

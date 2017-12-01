@@ -2,13 +2,12 @@ package com.github.karibulabs.tdd.service;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.karibulabs.tdd.RetryThresholdException;
 import com.github.karibulabs.tdd.domain.ChileanHollyday;
 import com.github.karibulabs.tdd.repository.ChileanHollydayRepository;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.mashape.unirest.http.ObjectMapper;
 import com.mashape.unirest.http.Unirest;
-import org.apache.commons.io.FileUtils;
-import org.h2.util.IOUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,19 +17,14 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.util.ReflectionTestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Matchers.any;
@@ -39,6 +33,8 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ChileanHollydayServiceImplTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ChileanHollydayServiceImplTest.class);
 
     static {
         Unirest.setObjectMapper(new ObjectMapper() {
@@ -66,14 +62,13 @@ public class ChileanHollydayServiceImplTest {
 
     private static final String TEST_URL = "/feriados";
     private static final String FAKE_HOLLYDAY_API_RESOURCE_URL = "http://localhost:8888" + TEST_URL;
-    private static final String JSON_RESPONSE_FILE = "feriados.json";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(options().port(8888));
 
     @InjectMocks
     @Spy
-    private ChileanHollydaysServiceImpl chileanHollydaysService;
+    private ChileanHollydayServiceImpl chileanHollydaysService;
 
     @Mock
     private ChileanHollydayRepository chileanHollydayRepository;
@@ -82,32 +77,101 @@ public class ChileanHollydayServiceImplTest {
     private List<ChileanHollyday> chileanHollydayList;
 
     @Mock
-    private  ChileanHollyday chileanHollyday;
+    private ChileanHollyday chileanHollyday;
+
+    private HollydayHelper hollydayHelper = new HollydayHelper();
 
     @Before
-    public void initMocks(){
-        ReflectionTestUtils.setField(chileanHollydaysService,"hollydayApiResourceURL",FAKE_HOLLYDAY_API_RESOURCE_URL);
+    public void initMocks() {
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void isHollydayTrueTest() throws IOException {
+    public void isHollydayTrueTest() {
 
-        File file = new ClassPathResource(JSON_RESPONSE_FILE).getFile();
-        String body = FileUtils.readFileToString(file);
+        hollydayHelper.setResourceURL(chileanHollydaysService, FAKE_HOLLYDAY_API_RESOURCE_URL);
+        hollydayHelper.setConnectionTimeout(chileanHollydaysService, 10000);
+        hollydayHelper.setSocketTimeout(chileanHollydaysService, 10000);
+        hollydayHelper.setMaxRetries(chileanHollydaysService, 1);
 
-
-        wireMockRule.stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withBody(body)));
+        wireMockRule.stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withBody(hollydayHelper.jsonBody())));
 
         doReturn(chileanHollyday).when(chileanHollydayRepository).findByDate(any(Date.class));
 
         Date someDate = new Date();
 
-        assertTrue("El valor debe ser feriado",chileanHollydaysService.isAHoliday(someDate));
+        assertTrue("El valor DEBE SER feriado", chileanHollydaysService.isAHoliday(someDate));
 
         verify(chileanHollydaysService).isAHoliday(someDate);
     }
 
+    @Test
+    public void isHollydayFalseTest() {
+
+        hollydayHelper.setResourceURL(chileanHollydaysService, FAKE_HOLLYDAY_API_RESOURCE_URL);
+        hollydayHelper.setConnectionTimeout(chileanHollydaysService, 10000);
+        hollydayHelper.setSocketTimeout(chileanHollydaysService, 10000);
+        hollydayHelper.setMaxRetries(chileanHollydaysService, 3);
+        hollydayHelper.setDelay(chileanHollydaysService, 1000);
+
+        wireMockRule.stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withBody(hollydayHelper.jsonBody())));
+
+        doReturn(null).when(chileanHollydayRepository).findByDate(any(Date.class));
+
+        Date someDate = new Date();
+
+        assertTrue("El valor NO DEBE SER feriado", !chileanHollydaysService.isAHoliday(someDate));
+
+        verify(chileanHollydaysService).isAHoliday(someDate);
+    }
+
+    @Test
+    public void isHollydayWithRetriesTest() {
+
+        hollydayHelper.setResourceURL(chileanHollydaysService, FAKE_HOLLYDAY_API_RESOURCE_URL);
+        hollydayHelper.setConnectionTimeout(chileanHollydaysService, 3000);
+        hollydayHelper.setSocketTimeout(chileanHollydaysService, 3000);
+        hollydayHelper.setMaxRetries(chileanHollydaysService, 3);
+        hollydayHelper.setDelay(chileanHollydaysService, 5000);
+
+        wireMockRule.stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withBody(hollydayHelper.jsonBody()).withFixedDelay(5000)));
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+                hollydayHelper.setConnectionTimeout(chileanHollydaysService, 6000);
+                hollydayHelper.setSocketTimeout(chileanHollydaysService, 6000);
+            } catch (InterruptedException e) {
+                LOGGER.error("Error al cambiar timeout", e);
+            }
+        }).start();
+
+        doReturn(chileanHollyday).when(chileanHollydayRepository).findByDate(any(Date.class));
+
+        Date someDate = new Date();
+
+        assertTrue("El valor DEBE SER feriado", chileanHollydaysService.isAHoliday(someDate));
+
+        verify(chileanHollydaysService).isAHoliday(someDate);
+    }
+
+    @Test(expected = RetryThresholdException.class)
+    public void isHollydayWithTimeoutErrorTest() {
+
+        hollydayHelper.setResourceURL(chileanHollydaysService, FAKE_HOLLYDAY_API_RESOURCE_URL);
+        hollydayHelper.setConnectionTimeout(chileanHollydaysService, 1000);
+        hollydayHelper.setSocketTimeout(chileanHollydaysService, 1000);
+        hollydayHelper.setMaxRetries(chileanHollydaysService, 1);
+        hollydayHelper.setDelay(chileanHollydaysService, 5000);
+
+        wireMockRule.stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withBody(hollydayHelper.jsonBody()).withFixedDelay(5000)));
+
+        doReturn(chileanHollyday).when(chileanHollydayRepository).findByDate(any(Date.class));
+
+        Date someDate = new Date();
+
+        chileanHollydaysService.isAHoliday(someDate);
+    }
 
 
 }

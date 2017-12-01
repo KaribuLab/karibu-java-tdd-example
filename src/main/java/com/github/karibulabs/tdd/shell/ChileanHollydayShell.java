@@ -1,6 +1,6 @@
 package com.github.karibulabs.tdd.shell;
 
-import com.github.karibulabs.tdd.service.ChileanHollydaysService;
+import com.github.karibulabs.tdd.service.ChileanHollydayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
@@ -14,7 +14,7 @@ import java.util.Date;
 public class ChileanHollydayShell {
 
     @Autowired
-    ChileanHollydaysService chileanHollydaysService;
+    ChileanHollydayService chileanHollydaysService;
 
     @ShellMethod("Valida sin un día es feriado")
     public String isHollyday(@ShellOption(value = "-date", help = "Fecha en formato YYYYMMDD") String dateString) {
