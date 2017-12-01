@@ -1,2 +1,9 @@
 /.gradle/
 /build/
+/.idea/
+!/.idea/modules/
+!/.idea/compiler.xml
+!/.idea/gradle.xml
+!/.idea/misc.xml
+!/.idea/modules.xml
+
