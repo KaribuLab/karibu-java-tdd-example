@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jline:jline:3.4.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jline/jline/3.4.0/c03fa55b14856de0ac55e5ee1ad69a59af53d7cd/jline-3.4.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jline/jline/3.4.0/3176823cad485db6af151a01dcaf0a7fa84e637b/jline-3.4.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

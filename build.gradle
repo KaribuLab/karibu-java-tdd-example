@@ -1,0 +1,37 @@
+buildscript {
+    ext {
+        springBootVersion = '1.5.9.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+
+group = 'com.github.karibulabs'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://repo.spring.io/libs-milestone'
+    }
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter')
+    compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    compile('org.springframework.shell:spring-shell-starter:2.0.0.M2')
+    compile('com.mashape.unirest:unirest-java:1.4.9')
+    compile('com.fasterxml.jackson.core:jackson-databind:2.9.2')
+    compile('com.fasterxml.jackson.core:jackson-annotations:2.9.2')
+    compile('com.h2database:h2')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
