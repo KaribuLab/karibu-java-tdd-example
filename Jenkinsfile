@@ -3,7 +3,7 @@ pipeline {
      tools {
         jdk 'jdk_1.8'
         gradle 'gradle_4.3.1'
-        dependencyCheck 'dependency_check_6.3.2'
+        dependency-check 'dependency_check_6.3.2'
     }
 
     stages {
