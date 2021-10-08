@@ -3,7 +3,6 @@ pipeline {
      tools {
         jdk 'jdk_1.8'
         gradle 'gradle_4.3.1'
-        dependency-check 'dependency_check_6.3.2'
     }
 
     stages {
@@ -20,17 +19,13 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing..'
-                sh '''
-                gradle test
-                '''
+                sh 'gradle test'
             }
         }
         stage('SCA') {
             steps {
                 echo 'Dependency Check....'
-                sh '''
-                gladle dependencyCheckAnalyze
-                '''
+                sh 'gradle dependencyCheckAnalyze'
             }
         }
         stage('SonarQube') {
