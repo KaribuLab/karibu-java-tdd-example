@@ -7,12 +7,14 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("org.owasp:dependency-check-gradle:6.3.2")
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
+apply plugin:  'org.owasp.dependencycheck'
 
 group = 'com.github.karibulabs'
 version = '0.0.1-SNAPSHOT'
