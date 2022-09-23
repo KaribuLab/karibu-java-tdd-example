@@ -12,6 +12,13 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 8
+      - name: Cache for Maven Dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repositories
+          key: ${{ runner.os }}-mvn-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-mvn-${{ hashFiles('**/pom.xml') }}
       - name: Grant execution permissions for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
