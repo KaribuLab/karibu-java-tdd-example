@@ -15,7 +15,7 @@ jobs:
       - name: Cache for Maven Dependencies
         uses: actions/cache@v2
         with:
-          path: ~/.m2/repository
+          path: /home/runner/.m2/repository
           key: ${{ runner.os }}-mvn
           restore-keys: |
             ${{ runner.os }}-mvn
