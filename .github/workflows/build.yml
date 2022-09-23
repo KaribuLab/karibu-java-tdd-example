@@ -15,10 +15,10 @@ jobs:
       - name: Cache for Maven Dependencies
         uses: actions/cache@v2
         with:
-          path: ~/.m2/repositories
-          key: ${{ runner.os }}-mvn-${{ hashFiles('**/pom.xml') }}
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-mvn
           restore-keys: |
-            ${{ runner.os }}-mvn-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-mvn
       - name: Grant execution permissions for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
